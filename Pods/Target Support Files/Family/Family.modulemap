@@ -1,0 +1,6 @@
+framework module Family {
+  umbrella header "Family-umbrella.h"
+
+  export *
+  module * { export * }
+}
