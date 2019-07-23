@@ -11,14 +11,24 @@ import Family
 
 class ViewController: FamilyViewController {
     
-    let vc1 = WithCollectionViewInsideViewController()
-    let vc2 = WithCollectionViewInsideViewController()
+    let vc1 = WithTableViewInsideViewController(itemCount: 10)
+    let vc2 = WithCollectionViewInsideViewController(itemCount: 50)
+    let vc3 = WithCollectionViewInsideViewController(itemCount: 50)
+    
+    let firstView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 100))
+    let secondView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 100))
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        addChild(vc1, view: { $0.collectionView })
-        addChild(vc2, view: { $0.collectionView })
+        firstView.backgroundColor = .red
+        secondView.backgroundColor = .blue
+        
+        addView(firstView)
+        addChild(self.vc1, view: { $0.tableView })
+        addView(secondView)
+        addChild(self.vc2, view: { $0.collectionView })
+        addChild(self.vc3, view: { $0.collectionView })
         
         view.backgroundColor = .darkGray
     }
