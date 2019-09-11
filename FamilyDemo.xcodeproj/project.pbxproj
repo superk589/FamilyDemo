@@ -7,18 +7,20 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		123A6C42232888DA00293C7D /* RootViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 123A6C40232888DA00293C7D /* RootViewController.xib */; };
+		123A6C43232888DA00293C7D /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123A6C41232888DA00293C7D /* RootViewController.swift */; };
 		12E83B0322DDD55B0096DD45 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E83B0222DDD55B0096DD45 /* AppDelegate.swift */; };
 		12E83B0722DDD55B0096DD45 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E83B0622DDD55B0096DD45 /* ViewController.swift */; };
 		12E83B0C22DDD55D0096DD45 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 12E83B0B22DDD55D0096DD45 /* Assets.xcassets */; };
 		12E83B0F22DDD55D0096DD45 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 12E83B0D22DDD55D0096DD45 /* LaunchScreen.storyboard */; };
 		12E83B1A22DDD6150096DD45 /* WithCollectionViewInsideViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E83B1922DDD6150096DD45 /* WithCollectionViewInsideViewController.swift */; };
 		12E83B1E22DEB2010096DD45 /* WithTableViewInsideViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12E83B1D22DEB2010096DD45 /* WithTableViewInsideViewController.swift */; };
-		12F5082922E70B2F0013B76C /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12F5082722E70B2F0013B76C /* RootViewController.swift */; };
-		12F5082A22E70B2F0013B76C /* RootViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 12F5082822E70B2F0013B76C /* RootViewController.xib */; };
 		1A08F35771533D778E74BC0A /* Pods_FamilyDemo.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3E902DDAB51758A472405D34 /* Pods_FamilyDemo.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		123A6C40232888DA00293C7D /* RootViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = RootViewController.xib; sourceTree = "<group>"; };
+		123A6C41232888DA00293C7D /* RootViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		12E83AFF22DDD55B0096DD45 /* FamilyDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FamilyDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		12E83B0222DDD55B0096DD45 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		12E83B0622DDD55B0096DD45 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -27,8 +29,6 @@
 		12E83B1022DDD55D0096DD45 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		12E83B1922DDD6150096DD45 /* WithCollectionViewInsideViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithCollectionViewInsideViewController.swift; sourceTree = "<group>"; };
 		12E83B1D22DEB2010096DD45 /* WithTableViewInsideViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WithTableViewInsideViewController.swift; sourceTree = "<group>"; };
-		12F5082722E70B2F0013B76C /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = RootViewController.swift; path = ../../../../../System/Volumes/Data/Users/zzk/LocalRepo/FamilyDemo/FamilyDemo/RootViewController.swift; sourceTree = "<group>"; };
-		12F5082822E70B2F0013B76C /* RootViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = RootViewController.xib; path = ../../../../../System/Volumes/Data/Users/zzk/LocalRepo/FamilyDemo/FamilyDemo/RootViewController.xib; sourceTree = "<group>"; };
 		3E902DDAB51758A472405D34 /* Pods_FamilyDemo.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_FamilyDemo.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CAED65DB955A6B6145117867 /* Pods-FamilyDemo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FamilyDemo.release.xcconfig"; path = "Target Support Files/Pods-FamilyDemo/Pods-FamilyDemo.release.xcconfig"; sourceTree = "<group>"; };
 		F8CF1CB45F4E4E4F499EC395 /* Pods-FamilyDemo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-FamilyDemo.debug.xcconfig"; path = "Target Support Files/Pods-FamilyDemo/Pods-FamilyDemo.debug.xcconfig"; sourceTree = "<group>"; };
@@ -70,8 +70,8 @@
 				12E83B1622DDD5E20096DD45 /* Children */,
 				12E83B0222DDD55B0096DD45 /* AppDelegate.swift */,
 				12E83B0622DDD55B0096DD45 /* ViewController.swift */,
-				12F5082722E70B2F0013B76C /* RootViewController.swift */,
-				12F5082822E70B2F0013B76C /* RootViewController.xib */,
+				123A6C41232888DA00293C7D /* RootViewController.swift */,
+				123A6C40232888DA00293C7D /* RootViewController.xib */,
 				12E83B0B22DDD55D0096DD45 /* Assets.xcassets */,
 				12E83B0D22DDD55D0096DD45 /* LaunchScreen.storyboard */,
 				12E83B1022DDD55D0096DD45 /* Info.plist */,
@@ -167,7 +167,7 @@
 			files = (
 				12E83B0F22DDD55D0096DD45 /* LaunchScreen.storyboard in Resources */,
 				12E83B0C22DDD55D0096DD45 /* Assets.xcassets in Resources */,
-				12F5082A22E70B2F0013B76C /* RootViewController.xib in Resources */,
+				123A6C42232888DA00293C7D /* RootViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,8 +220,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				12F5082922E70B2F0013B76C /* RootViewController.swift in Sources */,
 				12E83B0722DDD55B0096DD45 /* ViewController.swift in Sources */,
+				123A6C43232888DA00293C7D /* RootViewController.swift in Sources */,
 				12E83B0322DDD55B0096DD45 /* AppDelegate.swift in Sources */,
 				12E83B1E22DEB2010096DD45 /* WithTableViewInsideViewController.swift in Sources */,
 				12E83B1A22DDD6150096DD45 /* WithCollectionViewInsideViewController.swift in Sources */,

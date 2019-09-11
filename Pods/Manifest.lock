@@ -1,6 +1,6 @@
 PODS:
   - Differentiator (4.0.1)
-  - Family (0.18.5)
+  - Family (0.20.7)
   - RxCocoa (5.0.0):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
@@ -29,12 +29,12 @@ SPEC REPOS:
 
 SPEC CHECKSUMS:
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
-  Family: 0615edf667320b1ae6dae1c4e2c757e951866e61
+  Family: bc944680c0d0ac8dc83c5e5d03f3d755a9ddad27
   RxCocoa: fcf32050ac00d801f34a7f71d5e8e7f23026dcd8
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
   RxRelay: 4f7409406a51a55cd88483f21ed898c234d60f18
   RxSwift: 8b0671caa829a763bbce7271095859121cbd895f
 
-PODFILE CHECKSUM: c3ef42652d96e960727282c90af5c6854da1f4a6
+PODFILE CHECKSUM: 14010752fc84d205a11ccdd0c20b5f5bdcefd058
 
 COCOAPODS: 1.7.5

@@ -98,8 +98,9 @@ open class FamilyViewController: UIViewController, FamilyFriendly {
   ///   - duration: The animated duration of the update, this is used to animate any
   ///               changes to the view hierarchy.
   ///   - closure: A closure that will be invoked inside of the batch update context.
-  public func body(withDuration duration: Double = 0.25, _ closure: () -> Void) {
-    performBatchUpdates(withDuration: duration, { _ in
+  public func body(withDuration duration: Double = 0.25,
+                   animation: CAAnimation? = nil, _ closure: () -> Void) {
+    performBatchUpdates(withDuration: duration, animation: animation, { _ in
       closure()
     })
   }
@@ -222,9 +223,9 @@ open class FamilyViewController: UIViewController, FamilyFriendly {
       childController.view.isHidden = true
       subview = handler(childController)
     } else {
-      subview = childController.view
-      childController.view.translatesAutoresizingMaskIntoConstraints = true
-      childController.view.autoresizingMask = [.flexibleWidth]
+      subview = viewToAdd(from: childController)
+      subview.translatesAutoresizingMaskIntoConstraints = true
+      subview.autoresizingMask = [.flexibleWidth]
     }
 
     addView(subview, at: index, insets: insets, height: height)
@@ -247,9 +248,11 @@ open class FamilyViewController: UIViewController, FamilyFriendly {
   /// - Parameter childControllers: The view controllers to be added as children.
   @discardableResult
   public func addChildren(_ childControllers: [UIViewController]) -> Self {
-    for childController in childControllers {
-      _ = addChild(childController)
-    }
+    performBatchUpdates({ _ in
+      for childController in childControllers {
+        _ = addChild(childController)
+      }
+    })
     return self
   }
 
@@ -359,16 +362,19 @@ open class FamilyViewController: UIViewController, FamilyFriendly {
   ///
   /// - Parameters:
   ///   - handler: The operations that should be performed as a group.
+  ///   - animation: A CAAnimation that will be used when performing the batch update.
   ///   - completion: A completion handler that is invoked after the view
   ///                 has laid out its views.
   @discardableResult
   open func performBatchUpdates(withDuration duration: Double = 0.25,
+                                animation: CAAnimation? = nil,
                                 _ handler: (FamilyViewController) -> Void,
                                 completion: ((FamilyViewController) -> Void)? = nil) -> Self {
     scrollView.isPerformingBatchUpdates = true
     handler(self)
     scrollView.isPerformingBatchUpdates = false
-    scrollView.layoutViews(withDuration: duration) {
+    scrollView.cache.invalidate()
+    scrollView.layoutViews(withDuration: duration, animation: animation) {
       completion?(self)
     }
 
@@ -379,11 +385,14 @@ open class FamilyViewController: UIViewController, FamilyFriendly {
   ///
   /// - Parameter viewController: The target view controller
   /// - Returns: True if the view controller is visible on screen
-  public func viewControllerIsVisible(_ viewController: UIViewController) -> Bool {
-    guard let entry = registry[viewController] else { return false }
-    let view = wrappedViewIfNeeded(entry.view)
-    if view.frame.size.height == 0 { return false }
-    return view.frame.intersects(documentVisibleRect)
+  public func viewControllerIsVisible(_ viewController: ViewController) -> Bool {
+    guard let attributes = scrollView.getValidAttributes(in: scrollView.documentVisibleRect)
+      .first(where: { $0.view == viewController.view && $0.view.frame.size.height != 0 }) else {
+      return false
+    }
+    var frame = attributes.scrollView.frame
+    frame.size.height = attributes.contentSize.height
+    return frame.intersects(documentVisibleRect)
   }
 
   /// Check if a view controller is fully visible on screen.
@@ -391,11 +400,13 @@ open class FamilyViewController: UIViewController, FamilyFriendly {
   /// - Parameter viewController: The target view controller
   /// - Returns: True if the view controller is fully visible on screen
   public func viewControllerIsFullyVisible(_ viewController: UIViewController) -> Bool {
-    guard let entry = registry[viewController] else { return false }
-    let view = wrappedViewIfNeeded(entry.view)
-    if view.frame.size.height == 0 { return false }
-    let convertedFrame = scrollView.documentView.convert(view.frame,
+    guard let attributes = scrollView.getValidAttributes(in: scrollView.documentVisibleRect)
+      .first(where: { $0.view == viewController.view && $0.view.frame.size.height != 0 }) else {
+      return false
+    }
+    var convertedFrame = scrollView.documentView.convert(attributes.scrollView.frame,
                                                          to: scrollView.documentView)
+    convertedFrame.size.height = attributes.contentSize.height
     return documentVisibleRect.contains(convertedFrame)
   }
 

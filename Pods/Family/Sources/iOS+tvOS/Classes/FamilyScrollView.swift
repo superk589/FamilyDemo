@@ -1,6 +1,8 @@
 import UIKit
 
 public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestureRecognizerDelegate {
+  private var previousContentOffset: CGPoint = .init(x: -1, y: -1)
+
   /// The amount of insets that should be inserted inbetween views.
   public var margins: Insets {
     get { return spaceManager.defaultMargins }
@@ -31,6 +33,46 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
   internal var isDeallocating: Bool = false
   internal var isChildViewController: Bool = false
 
+  internal var validRect: CGRect {
+    var rect = documentVisibleRect
+    let offset = bounds.size.height * 2
+    rect.origin.y = max(self.contentOffset.y - (offset / 2), 0)
+    rect.size.height = bounds.size.height + offset
+    return rect
+  }
+
+  internal var discardableRect: CGRect {
+    var rect = documentVisibleRect
+    let offset = bounds.size.height * 2.5
+    rect.origin.y = max(self.contentOffset.y - (offset / 2), 0)
+    rect.size.height = bounds.size.height + offset
+    return rect
+  }
+
+  lazy var visibleRectLayer: UIView = {
+    let view = UIView()
+    view.isUserInteractionEnabled = false
+    view.layer.borderColor = UIColor.green.cgColor
+    view.layer.borderWidth = 2
+    return view
+  }()
+
+  lazy var validRectLayer: UIView = {
+    let view = UIView()
+    view.isUserInteractionEnabled = false
+    view.layer.borderColor = UIColor.yellow.cgColor
+    view.layer.borderWidth = 2
+    return view
+  }()
+
+  lazy var discardRectLayer: UIView = {
+    let view = UIView()
+    view.isUserInteractionEnabled = false
+    view.layer.borderColor = UIColor.red.cgColor
+    view.layer.borderWidth = 2
+    return view
+  }()
+
   /// The current viewport
   public var documentVisibleRect: CGRect {
     return CGRect(origin: contentOffset,
@@ -60,7 +102,7 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
   internal lazy var spaceManager = FamilySpaceManager()
   internal var isPerformingBatchUpdates: Bool = false
   lazy var cache = FamilyCache()
-  private var isScrolling: Bool { return isTracking || isDragging || isDecelerating }
+  var isScrolling: Bool { return isTracking || isDragging || isDecelerating }
 
   /// The custom distance that the content view is inset from the safe area or scroll view edges.
   open override var contentInset: UIEdgeInsets {
@@ -106,6 +148,9 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
       contentInsetAdjustmentBehavior = .never
     }
     addSubview(documentView)
+    addSubview(discardRectLayer)
+    addSubview(validRectLayer)
+    addSubview(visibleRectLayer)
   }
 
   required public init?(coder aDecoder: NSCoder) {
@@ -148,6 +193,7 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
     addSubview(backgroundView)
     sendSubviewToBack(backgroundView)
     cache.invalidate()
+    guard !isPerformingBatchUpdates else { return }
     layoutViews()
   }
 
@@ -204,6 +250,7 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
 
     spaceManager.removeView(subview)
     cache.invalidate()
+    guard !isPerformingBatchUpdates else { return }
     layoutIfNeeded()
   }
 
@@ -294,7 +341,7 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
 
       if strongSelf.scrollViewIsHorizontal(scrollView), abs(newValue.y) != 0 {
         scrollView.contentOffset.y = 0
-        strongSelf.runLayoutSubviewsAlgorithm()
+        strongSelf.layoutViews()
       }
     })
     observers.append(Observer(view: view, keyValueObservation: contentOffsetObserver))
@@ -334,6 +381,7 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
   public func addPadding(_ insets: Insets, for view: View) {
     spaceManager.addPadding(insets, for: view)
     cache.invalidate()
+    guard !isPerformingBatchUpdates else { return }
     layoutViews()
   }
 
@@ -344,6 +392,7 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
   public func addMargins(_ insets: Insets, for view: View) {
     spaceManager.addMargins(insets, for: view)
     cache.invalidate()
+    guard !isPerformingBatchUpdates else { return }
     layoutViews()
   }
 
@@ -372,7 +421,20 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
   public func layoutViews(withDuration duration: Double? = nil,
                           animation: CAAnimation? = nil,
                           completion: (() -> Void)? = nil) {
-    guard isPerformingBatchUpdates == false else { return }
+    guard !isPerformingBatchUpdates else { return }
+
+    defer { previousContentOffset = contentOffset }
+    let shouldLayoutViews = subviewsInLayoutOrder.first(where: { $0.layer.animationKeys() != nil }) != nil
+    guard contentOffset != previousContentOffset || cache.state == .empty || shouldLayoutViews else { return }
+
+    defer {
+      // Clean up invalid views.
+      if !isScrolling {
+        for scrollView in subviewsInLayoutOrder where scrollView.frame.size.height != 0 && !scrollView.frame.intersects(discardableRect) {
+          scrollView.frame.size.height = 0
+        }
+      }
+    }
 
     guard !isDeallocating else { return }
 
@@ -383,6 +445,45 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
 
     // Make sure that wrapper views have the correct width
     // on their wrapped views.
+    if cache.state == .empty { adjustViewsWithPaddingAndMargins() }
+
+    if documentView.frame != bounds {
+      documentView.frame = bounds
+      documentView.bounds = CGRect(origin: contentOffset, size: bounds.size)
+    }
+
+    let options: UIView.AnimationOptions = [.allowUserInteraction, .beginFromCurrentState]
+    let animations = { self.runLayoutSubviewsAlgorithm() }
+    let animationCompletion: (Bool) -> Void = { _ in completion?() }
+
+    if #available(iOS 9.0, *) {
+      if let animation = animation {
+        switch animation {
+        case let springAnimation as CASpringAnimation:
+          UIView.animate(withDuration: springAnimation.duration, delay: 0.0,
+                         usingSpringWithDamping: springAnimation.damping,
+                         initialSpringVelocity: springAnimation.initialVelocity,
+                         options: options, animations: animations, completion: animationCompletion)
+        default:
+          UIView.animate(withDuration: animation.duration, delay: 0.0, options: options, animations: {
+            self.runLayoutSubviewsAlgorithm()
+          }, completion: animationCompletion)
+        }
+        return
+      }
+    }
+
+    if let duration = duration, duration > 0.0 {
+      UIView.animate(withDuration: duration, delay: 0.0, options: options, animations: {
+        self.runLayoutSubviewsAlgorithm()
+      }, completion: animationCompletion)
+    } else {
+      runLayoutSubviewsAlgorithm()
+      completion?()
+    }
+  }
+
+  func adjustViewsWithPaddingAndMargins() {
     for case let scrollView in subviewsInLayoutOrder {
       let wrapperView = scrollView as? FamilyWrapperView
       let padding = spaceManager.padding(for: wrapperView?.view ?? scrollView)
@@ -423,41 +524,32 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
         }
       }
     }
+  }
 
-    if documentView.frame != bounds {
-      documentView.frame = bounds
-      documentView.bounds = CGRect(origin: contentOffset, size: bounds.size)
+  func getValidAttributes(in rect: CGRect) -> [FamilyViewControllerAttributes] {
+    let binarySearch = BinarySearch()
+    let upper: (FamilyViewControllerAttributes) -> Bool = { attributes in
+      let frame = attributes.scrollView.layer.presentation()?.frame ?? attributes.scrollView.frame
+      return attributes.frame.maxY >= rect.minY ||
+        frame.maxY >= rect.minY
     }
-
-    let options: UIView.AnimationOptions = [.allowUserInteraction, .beginFromCurrentState]
-    let animations = { self.runLayoutSubviewsAlgorithm() }
-    let animationCompletion: (Bool) -> Void = { _ in completion?() }
-
-    if #available(iOS 9.0, *) {
-      if let animation = animation {
-        switch animation {
-        case let springAnimation as CASpringAnimation:
-          UIView.animate(withDuration: springAnimation.duration, delay: 0.0,
-                         usingSpringWithDamping: springAnimation.damping,
-                         initialSpringVelocity: springAnimation.initialVelocity,
-                         options: options, animations: animations, completion: animationCompletion)
-        default:
-          UIView.animate(withDuration: animation.duration, delay: 0.0, options: options, animations: {
-            self.runLayoutSubviewsAlgorithm()
-          }, completion: animationCompletion)
-        }
-        return
-      }
+    let lower: (FamilyViewControllerAttributes) -> Bool = { attributes in
+      let frame = attributes.scrollView.layer.presentation()?.frame ?? attributes.scrollView.frame
+      return attributes.frame.minY <= rect.maxY ||
+        frame.minY <= rect.maxY
     }
-
-    if let duration = duration, duration > 0.0 {
-      UIView.animate(withDuration: duration, delay: 0.0, options: options, animations: {
-        self.runLayoutSubviewsAlgorithm()
-      }, completion: animationCompletion)
-    } else {
-      runLayoutSubviewsAlgorithm()
-      completion?()
+    let less: (FamilyViewControllerAttributes) -> Bool =  { attributes in
+      let frame = attributes.scrollView.layer.presentation()?.frame ?? attributes.scrollView.frame
+      return attributes.frame.maxY < rect.minY ||
+        frame.maxY < rect.minY
     }
+    let attributes = cache.collection
+    let validAttributes = binarySearch.findElements(in: attributes,
+                                                    upper: upper,
+                                                    lower: lower,
+                                                    less: less,
+                                                    match: { $0.frame.intersects(rect) })
+    return validAttributes
   }
 
   internal func compare(_ lhs: CGSize, to rhs: CGSize) -> Bool {
@@ -471,5 +563,148 @@ public class FamilyScrollView: UIScrollView, FamilyDocumentViewDelegate, UIGestu
   @objc func injected() {
     cache.invalidate()
     layoutViews()
+  }
+
+  // MARK: - Layout Algorithm
+
+  /// The layout algorithm simply lays out the view in linear order vertically
+  /// based on the views index inside `subviewsInLayoutOrder`. This is invoked
+  /// when a view changes size or origin. It also scales the frame of scroll views
+  /// in order to keep dequeuing for table and collection views.
+  internal func runLayoutSubviewsAlgorithm() {
+    guard cache.state != .isRunning else { return }
+
+    let parentContentOffset = CGPoint(x: round(self.contentOffset.x),
+                                      y: round(self.contentOffset.y))
+
+    if cache.state == .empty {
+      cache.state = .isRunning
+      var yOffsetOfCurrentSubview: CGFloat = 0.0
+      for scrollView in subviewsInLayoutOrder where scrollView.isHidden == false {
+        if (scrollView as? FamilyWrapperView)?.view.isHidden == true {
+          continue
+        }
+
+        let view = (scrollView as? FamilyWrapperView)?.view ?? scrollView
+        let padding = spaceManager.padding(for: view)
+        let margins = spaceManager.margins(for: view)
+
+        yOffsetOfCurrentSubview += margins.top
+
+        var frame = scrollView.frame
+        var contentOffset = scrollView.contentOffset
+
+        if parentContentOffset.y < yOffsetOfCurrentSubview {
+          contentOffset.y = 0.0
+          frame.origin.y = round(yOffsetOfCurrentSubview)
+        } else {
+          contentOffset.y = round(parentContentOffset.y - yOffsetOfCurrentSubview)
+          frame.origin.y = parentContentOffset.y
+        }
+
+        let remainingBoundsHeight = fmax(bounds.maxY - yOffsetOfCurrentSubview, 0.0)
+        let remainingContentHeight = fmax(scrollView.contentSize.height - contentOffset.y, 0.0)
+        var newHeight: CGFloat = ceil(fmin(remainingBoundsHeight, remainingContentHeight))
+
+        if scrollView is FamilyWrapperView {
+          newHeight = fmin(documentView.frame.height, scrollView.contentSize.height)
+          frame.origin.x = margins.left
+        } else {
+          newHeight = fmin(documentView.frame.height, newHeight)
+          frame.origin.x = padding.left
+        }
+
+        frame.size.width = self.frame.size.width - margins.left - margins.right
+        frame.size.height = round(newHeight)
+        frame.origin.y = round(yOffsetOfCurrentSubview)
+
+        if !frame.intersects(documentVisibleRect) {
+          frame.size.height = 0
+        }
+
+        scrollView.frame = frame
+
+        cache.add(entry: FamilyViewControllerAttributes(view: view,
+                                                        origin: CGPoint(x: frame.origin.x,
+                                                                        y: round(yOffsetOfCurrentSubview + padding.top)),
+                                                        contentSize: scrollView.contentSize))
+
+        if let backgroundView = backgrounds[view] {
+          frame.origin.y = round(yOffsetOfCurrentSubview)
+          positionBackgroundView(scrollView, frame, margins, padding, backgroundView, view)
+        }
+
+        if scrollView.contentSize.height > 0 {
+          yOffsetOfCurrentSubview += round(scrollView.contentSize.height + margins.bottom + padding.top + padding.bottom)
+        }
+      }
+
+      let computedHeight = round(yOffsetOfCurrentSubview)
+      let minimumContentHeight = bounds.height - (contentInset.top + contentInset.bottom)
+      var height = fmax(computedHeight, minimumContentHeight)
+      cache.contentSize = CGSize(width: bounds.size.width, height: computedHeight)
+
+      if isChildViewController {
+        height = computedHeight
+        superview?.frame.size.height = cache.contentSize.height
+      }
+
+      cache.state = .isFinished
+      contentSize = CGSize(width: cache.contentSize.width, height: round(height))
+    }
+
+    let validAttributes = getValidAttributes(in: discardableRect)
+    for attributes in validAttributes where attributes.view.isHidden == false  {
+      let scrollView = attributes.scrollView
+      let padding = spaceManager.padding(for: attributes)
+      var frame = scrollView.frame
+      var contentOffset = scrollView.contentOffset
+
+      if parentContentOffset.y < scrollView.frame.origin.y {
+        contentOffset.y = 0.0
+        frame.origin.y = round(scrollView.frame.origin.y)
+      } else {
+        contentOffset.y = round(parentContentOffset.y - scrollView.frame.origin.y)
+        frame.origin.y = parentContentOffset.y
+      }
+
+      var newHeight: CGFloat = fmin(documentView.frame.height, scrollView.contentSize.height)
+
+      if !attributes.frame.intersects(validRect) {
+        newHeight = 0
+      }
+
+      // Only add padding if the new height exceeds zero.
+      if newHeight > 0 {
+        newHeight += padding.top + padding.bottom
+      }
+
+      let shouldScroll = (parentContentOffset.y >= round(frame.origin.y) &&
+        parentContentOffset.y < attributes.maxY) &&
+        round(frame.height) > round(documentView.frame.height)
+
+      if scrollView is FamilyWrapperView {
+        if scrollView.contentOffset.y != contentOffset.y && parentContentOffset.y < scrollView.frame.origin.y {
+          scrollView.contentOffset.y = contentOffset.y
+        } else {
+          frame.origin.y = attributes.frame.origin.y
+        }
+      } else if shouldScroll {
+        scrollView.contentOffset.y = contentOffset.y
+      } else {
+        frame.origin.y = attributes.origin.y
+        // Reset content offset to avoid setting offsets that
+        // look liked `clipsToBounds` bugs.
+        if self.contentOffset.y < attributes.maxY {
+          scrollView.contentOffset.y = 0
+        }
+      }
+
+      frame.size.height = round(newHeight)
+
+      if scrollView.frame != frame {
+        scrollView.frame = frame
+      }
+    }
   }
 }
