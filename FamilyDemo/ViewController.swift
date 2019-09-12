@@ -13,7 +13,8 @@ class ViewController: FamilyViewController {
     
     let vc1 = WithTableViewInsideViewController(itemCount: 10)
     let vc2 = WithCollectionViewInsideViewController(itemCount: 50)
-    let vc3 = WithCollectionViewInsideViewController(itemCount: 50)
+    let vc3 = WithCollectionViewInsideViewController(itemCount: 10)
+    let vc4 = WithCollectionViewInsideViewController(itemCount: 10)
     
     let firstView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 100))
     let secondView = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 100))
@@ -29,7 +30,8 @@ class ViewController: FamilyViewController {
         addView(secondView)
         addChild(self.vc2, view: { $0.collectionView })
         addChild(self.vc3, view: { $0.collectionView })
-        
+        addChild(self.vc4, view: { $0.collectionView })
+
         view.backgroundColor = .darkGray
     }
 

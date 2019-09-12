@@ -15,8 +15,13 @@ class WithCollectionViewInsideViewController: UIViewController {
     
     private let itemCount: Int
     
-    init(itemCount: Int) {
+    private let cellColor: UIColor
+    
+    private var items = BehaviorRelay<[Double]>(value: [])
+    
+    init(itemCount: Int, cellColor: UIColor = UIColor.random()) {
         self.itemCount = itemCount
+        self.cellColor = cellColor
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -30,9 +35,11 @@ class WithCollectionViewInsideViewController: UIViewController {
     
     private let disposeBag = DisposeBag()
     
-    let dataSource = RxCollectionViewSectionedReloadDataSource<SectionModel<Void, Int>>(configureCell: { (dataSource, collectionView, indexPath, row) -> UICollectionViewCell in
+    lazy var dataSource = RxCollectionViewSectionedReloadDataSource<SectionModel<Void, Double>>(configureCell: { [unowned self] (dataSource, collectionView, indexPath, row) -> UICollectionViewCell in
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "Cell", for: indexPath) as! CollectionViewCell
         cell.label.text = String(row)
+        cell.label.textColor = .white
+        cell.contentView.backgroundColor = self.cellColor
         return cell
     })
 
@@ -49,8 +56,22 @@ class WithCollectionViewInsideViewController: UIViewController {
         // simulate a network request here
         Observable.just(Array(0..<itemCount))
             .delay(.seconds(2), scheduler: MainScheduler.instance)
+            .map { $0.map { Double($0) } }
+            .bind(to: items)
+            .disposed(by: disposeBag)
+        
+        items
             .map { [SectionModel(model: (), items: $0)] }
             .bind(to: collectionView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
+        
+        Observable
+            .zip(collectionView.rx.modelSelected(Double.self), collectionView.rx.itemSelected)
+            .subscribe(onNext: { [unowned self] (item, indexPath) in
+                var newItems = self.items.value
+                newItems.insert(item + 0.1, at: indexPath.item + 1)
+                self.items.accept(newItems)
+            })
             .disposed(by: disposeBag)
     }
 

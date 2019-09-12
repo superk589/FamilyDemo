@@ -6,7 +6,7 @@ target 'FamilyDemo' do
   use_frameworks!
 
   # Pods for FamilyDemo
-	pod "Family"
+	pod 'Family', :git=>'git@github.com:zenangst/Family.git', :branch=>'fix/rendering-issues-with-vertical-collection-views'
 	pod "RxSwift"
 	pod "RxCocoa"
   pod "RxDataSources"
