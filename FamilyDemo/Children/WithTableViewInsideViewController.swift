@@ -29,26 +29,25 @@ class WithTableViewInsideViewController: UIViewController {
     private let disposeBag = DisposeBag()
     
     let dataSource = RxTableViewSectionedReloadDataSource<SectionModel<Void, Int>>(configureCell: { (dataSource, tableView, indexPath, row) -> UITableViewCell in
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! TableViewCell
-        cell.label.text = String(row)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! TextViewTableViewCell
         return cell
     })
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        tableView.register(TableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.register(UINib.init(nibName: "TextViewTableViewCell", bundle: nil), forCellReuseIdentifier: "Cell")
         tableView.backgroundColor = .white
-    }
-    
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 80
         
         // simulate a network request here
         Observable.just(Array(0..<itemCount))
             .delay(.seconds(2), scheduler: MainScheduler.instance)
+            .take(1)
             .map { [SectionModel(model: (), items: $0)] }
             .bind(to: tableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
+        
     }
     
 }

@@ -1,49 +1,50 @@
 PODS:
   - Differentiator (4.0.1)
-  - Family (0.20.8)
-  - RxCocoa (5.0.0):
+  - Family (0.22.4)
+  - RxCocoa (5.0.1):
     - RxRelay (~> 5)
     - RxSwift (~> 5)
   - RxDataSources (4.0.1):
     - Differentiator (~> 4.0)
     - RxCocoa (~> 5.0)
     - RxSwift (~> 5.0)
-  - RxRelay (5.0.0):
+  - RxGesture (3.0.1):
+    - RxCocoa (~> 5.0)
+    - RxSwift (~> 5.0)
+  - RxRelay (5.0.1):
     - RxSwift (~> 5)
-  - RxSwift (5.0.0)
+  - RxSwift (5.0.1)
+  - Then (2.6.0)
 
 DEPENDENCIES:
-  - "Family (from `git@github.com:zenangst/Family.git`, branch `fix/rendering-issues-with-vertical-collection-views`)"
+  - Family (= 0.22.4)
   - RxCocoa
   - RxDataSources
+  - RxGesture
   - RxSwift
+  - Then
 
 SPEC REPOS:
-  https://github.com/cocoapods/specs.git:
+  trunk:
     - Differentiator
+    - Family
     - RxCocoa
     - RxDataSources
+    - RxGesture
     - RxRelay
     - RxSwift
-
-EXTERNAL SOURCES:
-  Family:
-    :branch: fix/rendering-issues-with-vertical-collection-views
-    :git: "git@github.com:zenangst/Family.git"
-
-CHECKOUT OPTIONS:
-  Family:
-    :commit: c79f434a12377f04b76982592f99612f7676a0ba
-    :git: "git@github.com:zenangst/Family.git"
+    - Then
 
 SPEC CHECKSUMS:
   Differentiator: 886080237d9f87f322641dedbc5be257061b0602
-  Family: f902b967dad9ac8a78bfb3c5a1e557529feacb6e
-  RxCocoa: fcf32050ac00d801f34a7f71d5e8e7f23026dcd8
+  Family: 0dffb3c3ec36b85a599e43b9aa3d8cefeef81873
+  RxCocoa: e741b9749968e8a143e2b787f1dfbff2b63d0a5c
   RxDataSources: efee07fa4de48477eca0a4611e6d11e2da9c1114
-  RxRelay: 4f7409406a51a55cd88483f21ed898c234d60f18
-  RxSwift: 8b0671caa829a763bbce7271095859121cbd895f
+  RxGesture: a3f8dd6adf078110ed5e1c9c30d09d705a09852e
+  RxRelay: 89d54507f4fd4d969e6ec1d4bd7f3673640b4640
+  RxSwift: e2dc62b366a3adf6a0be44ba9f405efd4c94e0c4
+  Then: 90cd104fd951cec1980a03f57704ad8f784d4d79
 
-PODFILE CHECKSUM: ef4469c8be8616fb7330275dea08a546790269ad
+PODFILE CHECKSUM: b014eed3eb6c761237f68d725a1e8b79c890487f
 
-COCOAPODS: 1.7.5
+COCOAPODS: 1.8.4

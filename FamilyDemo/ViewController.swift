@@ -11,7 +11,7 @@ import Family
 
 class ViewController: FamilyViewController {
     
-    let vc1 = WithTableViewInsideViewController(itemCount: 10)
+    let vc1 = WithTableViewInsideViewController(itemCount: 1)
     let vc2 = WithCollectionViewInsideViewController(itemCount: 50)
     let vc3 = WithCollectionViewInsideViewController(itemCount: 10)
     let vc4 = WithCollectionViewInsideViewController(itemCount: 10)
